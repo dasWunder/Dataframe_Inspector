@@ -5,9 +5,16 @@ import logging
 import matplotlib.pyplot as plt
 from IPython.display import display
 
+# setting up printing options
+pd.set_option('display.max_columns', True)
+pd.set_option('display.max_rows', True)
+
 '''
 Changelog
 1. May 10, 2025. File creation, head_info development, some initial manual tests and test continuation will follow later
+2. May 12, 2025. 
+    - Spent a bit time to create a plan for future development, keeping in mind architecture and code quality
+    - Added a test for Series object for head_info function
 '''
 
 # logging setup
@@ -24,9 +31,15 @@ def head_info(df, n=5):
     df (pd.DataFrame): The DataFrame to inspect.
     n (int): Number of rows to display from the top (must be >= 0).
     """
-    if not isinstance(df, pd.DataFrame):
+    if not isinstance(df, (pd.DataFrame, pd.Series)):
         logger.error("Expected a pandas DataFrame, got %s", type(df))
         raise TypeError("df must be a pandas DataFrame")
+    
+    if isinstance(df, pd.Series):
+        display(df.head(n))
+        print(f"\nSeries name: {df.name}")
+        print(f"Type: {df.dtype}")
+        print(f"Missing: {df.isnull().sum()} of {len(df)} values")
 
     if not isinstance(n, int) or n < 0:
         logger.error("Invalid 'n' value: %s", n)
@@ -35,3 +48,39 @@ def head_info(df, n=5):
     logger.info("Displaying head with n=%d", n)
     display(df.head(n))
     df.info()
+    
+    
+''' To-do list:
+
+First of all:
+1. readme.md
+2. learn logging and introduce it
+3. the more the module grows, the more folders should be added. like __init__.py. separate part like summary, preprocess, eda and others should be as separate .py files
+4. separate folder for tests
+
+
+Development:
+1. Test error messages for head_info
+2. Add full_describe
+3. Add numeric_describe
+4. Add query function
+5. Add various logic indices ways. Single condition, multiple conditions, various cols to output
+6. Agg by function
+
+#### Data preprocessing
+1. missing values
+2. unique values
+3. duplicate number
+4. duplicated rows
+5. bring more ideas
+
+
+#### EDA
+1. Distribution
+2. Boxplots
+3. Correlation + heatmap
+4. Scatter plots
+5. Line plots
+6. Bar plots (with either horizontal and vertical options)
+7. Pairplot / jointplot
+'''
