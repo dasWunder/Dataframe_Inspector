@@ -36,7 +36,7 @@ def head_info(df: pd.DataFrame | pd.Series, n: int = 5) -> None:
 
     if not isinstance(n, int) or n <= 0:
         logger.error("Invalid 'n' value: %s", n)
-        raise ValueError("n must be >= 1")
+        raise ValueError("n must be integer >= 1")
 
     if isinstance(df, pd.Series):
         display(df.head(n))
@@ -69,7 +69,7 @@ def head(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
 
     if not isinstance(n, int) or n <= 0:
         logger.error("Invalid 'n' value: %s", n)
-        raise ValueError("n must be >= 1")
+        raise ValueError("n must be integer >= 1")
 
     return df.head(n)
 
@@ -115,7 +115,7 @@ def tail(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
 
     if not isinstance(n, int) or n <= 0:
         logger.error("Invalid 'n' value: %s", n)
-        raise ValueError("n must be >= 1")
+        raise ValueError("n must be integer >= 1")
 
     return df.tail(n)
 
@@ -176,16 +176,32 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Missing values summary.
     """
     missing_count = df.isnull().sum()
-    missing_pct = df.isnull().mean() * 100
+    missing_ratio_per_col = df.isnull().mean() * 100
     dtype = df.dtypes
 
     result = pd.DataFrame({
         "missing_count": missing_count,
-        "missing_pct": missing_pct,
+        "missing_ration": missing_ratio_per_col,
         "dtype": dtype
     })
 
     return result[result.missing_count > 0].sort_values(by="missing_pct", ascending=False)
+
+def top_values_summary(df: pd.DataFrame, top_n: int = 3) -> pd.DataFrame:
+    """
+    Returns top `n` most frequent values for each column (object or categorical).
+
+    Args:
+        df (pd.DataFrame): The DataFrame to inspect.
+        top_n (int, optional): Number of top values to return. Defaults to 3.
+
+    Returns:
+        pd.DataFrame: A dictionary-like overview of top values per column.
+    """
+    summary = {}
+    for col in df.select_dtypes(include=['object', 'category']):
+        summary[col] = df[col].value_counts().head(top_n).to_dict()
+    return pd.DataFrame.from_dict(summary, orient='index')
 
 
 def duplicate_summary(df: pd.DataFrame) -> int:
@@ -215,8 +231,34 @@ def shape_summary(df: pd.DataFrame) -> dict:
         "rows": df.shape[0],
         "columns": df.shape[1],
         "total_values": df.size,
-        "column_names": df.columns.tolist()
+        "column_names": df.columns.tolist(),
+        "null_cells": df.isnull().sum().sum(),
+        "duplicated_rows": df.duplicated().sum()
     }
+
+def outlier_summary(df: pd.DataFrame, multiplier: float = 1.5) -> pd.DataFrame:
+    """
+    Returns count of outliers per numeric column based on IQR.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to inspect.
+        multiplier (float, optional): IQR multiplier. Defaults to 1.5.
+
+    Returns:
+        pd.DataFrame: Number of outliers per numeric column.
+    """
+    numeric_df = df.select_dtypes(include='number')
+    outlier_counts = {}
+
+    for col in numeric_df.columns:
+        q1 = numeric_df[col].quantile(0.25)
+        q3 = numeric_df[col].quantile(0.75)
+        iqr = q3 - q1
+        lower = q1 - multiplier * iqr
+        upper = q3 + multiplier * iqr
+        outlier_counts[col] = ((numeric_df[col] < lower) | (numeric_df[col] > upper)).sum()
+
+    return pd.DataFrame.from_dict(outlier_counts, orient='index', columns=['outlier_count']).sort_values(by='outlier_count', ascending=False)
 
 
 def full_summary(df: pd.DataFrame, n: int = 5, describe_mode: str = 'numerical') -> None:
