@@ -1,11 +1,13 @@
-# The module's goal is to study the data and get highlevel summary. 
-# The module will contain various python functions to help achieving the various initial data overview goals.
-
+''' Intro description
+1. The module's goal is to study the data and get highlevel summary. 
+2. The module will contain various python functions to help achieving the various initial data overview goals.
+3. head(), tail(), info(), .dtypes, describe(), missing values, unique values etc.
+'''
 import pandas as pd
 import logging
 from IPython.display import display
 
-# setting up printing options
+# setting up printing options for convenience
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
@@ -181,11 +183,11 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
 
     result = pd.DataFrame({
         "missing_count": missing_count,
-        "missing_ration": missing_ratio_per_col,
+        "missing_ratio": missing_ratio_per_col,
         "dtype": dtype
     })
 
-    return result[result.missing_count > 0].sort_values(by="missing_pct", ascending=False)
+    return result[result.missing_count > 0].sort_values(by="missing_ratio", ascending=False)
 
 def top_values_summary(df: pd.DataFrame, top_n: int = 3) -> pd.DataFrame:
     """
@@ -273,23 +275,24 @@ def full_summary(df: pd.DataFrame, n: int = 5, describe_mode: str = 'numerical')
     Returns:
         None
     """
-    print("\n🔹 Shape:")
+    print("\n ---Head---")
+    display(df.head())
+    
+    print("\n ---Info---")
+    print(df.info())
+    
+    print("\n ---Shape---")
     display(shape_summary(df))
 
-    print("\n🔹 Column Overview:")
+    print("\n ---Column Overview---")
     display(column_overview(df))
 
-    print("\n🔹 Missing Summary:")
+    print("\n ---Missing Summary---")
     display(missing_summary(df))
 
-    print("\n🔹 Duplicate Rows:")
+    print("\n ---Duplicate Rows---")
     display(f"{duplicate_summary(df)} rows")
 
-    print("\n🔹 Description:")
+    print("\n ---Descriptive Stats---")
     display(describe(df, mode=describe_mode))
 
-    print("\n🔹 Head:")
-    display(df.head(n))
-
-    print("\n🔹 Tail:")
-    display(df.tail(n))
