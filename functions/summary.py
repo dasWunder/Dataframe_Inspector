@@ -23,11 +23,11 @@ def head_info(df: pd.DataFrame | pd.Series, n: int = 5) -> None:
     
     Args:
         df (pd.DataFrame or pd.Series): The object to inspect.
-        n (int, optional): Number of rows to display. Must be non-negative. Defaults to 5.
+        n (int, optional): Number of rows to display. Must be non-negative and integer. Defaults to 5.
 
     Raises:
         TypeError: If `df` is not a pandas DataFrame or Series.
-        ValueError: If `n` is negative.
+        ValueError: If `n` is negative and non integer.
 
     Returns:
         None
@@ -56,11 +56,11 @@ def head(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
     
     Args:
         df (pd.DataFrame or pd.Series): The object to inspect.
-        n (int, optional): Number of rows to return. Must be non-negative. Defaults to 5.
+        n (int, optional): Number of rows to return. Must be non-negative and integer. Defaults to 5.
 
     Raises:
         TypeError: If `df` is not a pandas DataFrame or Series.
-        ValueError: If `n` is negative.
+        ValueError: If `n` is negative and non integer.
 
     Returns:
         pd.DataFrame or pd.Series: The top `n` rows.
@@ -102,11 +102,11 @@ def tail(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
 
     Args:
         df (pd.DataFrame or pd.Series): The object to inspect.
-        n (int, optional): Number of rows to return from the bottom. Must be non-negative. Defaults to 5.
+        n (int, optional): Number of rows to return from the bottom. Must be non-negative and integer. Defaults to 5.
 
     Raises:
         TypeError: If `df` is not a pandas DataFrame or Series.
-        ValueError: If `n` is negative.
+        ValueError: If `n` is negative and non-integer.
 
     Returns:
         pd.DataFrame or pd.Series: The bottom `n` rows.
@@ -165,7 +165,25 @@ def column_overview(df: pd.DataFrame) -> pd.DataFrame:
         "dtype": df.dtypes,
         "unique_values_count": df.nunique()
     }).sort_values(by="unique_values_count", ascending=False)
+    
+def shape_summary(df: pd.DataFrame) -> dict:
+    """
+    Returns dictionary with number of rows, columns, and total values.
 
+    Args:
+        df (pd.DataFrame): The DataFrame to inspect.
+
+    Returns:
+        dict: Basic shape info.
+    """
+    return {
+        "rows": df.shape[0],
+        "columns": df.shape[1],
+        "total_size": df.size,
+        "column_names": df.columns.tolist(),
+        "missing_values_number": df.isnull().sum().sum(),
+        "duplicated_rows": df.duplicated().sum()
+    }
 
 def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -218,26 +236,6 @@ def duplicate_summary(df: pd.DataFrame) -> int:
     """
     return df.duplicated().sum()
 
-
-def shape_summary(df: pd.DataFrame) -> dict:
-    """
-    Returns dictionary with number of rows, columns, and total values.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to inspect.
-
-    Returns:
-        dict: Basic shape info.
-    """
-    return {
-        "rows": df.shape[0],
-        "columns": df.shape[1],
-        "total_values": df.size,
-        "column_names": df.columns.tolist(),
-        "null_cells": df.isnull().sum().sum(),
-        "duplicated_rows": df.duplicated().sum()
-    }
-
 def outlier_summary(df: pd.DataFrame, multiplier: float = 1.5) -> pd.DataFrame:
     """
     Returns count of outliers per numeric column based on IQR.
@@ -281,18 +279,23 @@ def full_summary(df: pd.DataFrame, n: int = 5, describe_mode: str = 'numerical')
     print("\n ---Info---")
     print(df.info())
     
-    print("\n ---Shape---")
-    display(shape_summary(df))
-
+    print("\n ---Descriptive Stats---")
+    display(describe(df, mode=describe_mode))
+    
     print("\n ---Column Overview---")
     display(column_overview(df))
+    
+    print("\n ---Shape Summary---")
+    display(shape_summary(df))
 
     print("\n ---Missing Summary---")
     display(missing_summary(df))
+    
+    print("\n ---Top Values Summary---")
+    display(top_values_summary(df))
 
     print("\n ---Duplicate Rows---")
     display(f"{duplicate_summary(df)} rows")
-
-    print("\n ---Descriptive Stats---")
-    display(describe(df, mode=describe_mode))
-
+    
+    print("\n ---Outliers Summary---")
+    display(outlier_summary(df))
