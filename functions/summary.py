@@ -1,19 +1,19 @@
 ''' Intro description
 1. The module's goal is to study the data and get highlevel summary. 
 2. The module will contain various python functions to help achieving the various initial data overview goals.
-3. head(), tail(), info(), .dtypes, describe(), missing values, unique values etc.
+3. head(), info(), .dtypes, describe(), missing values, unique values, outliers (via quantiles)
 '''
 import pandas as pd
 import logging
+from functions.validators import validate_dataframe_or_series, validate_dataframe, validate_positive_integer
 from IPython.display import display
 
-# setting up printing options for convenience
+# setting up printing options to read output conveniently
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 # Logger setup
 logger = logging.getLogger(__name__)
-# changed logging from INFO to ERROR to minimize logging to necessary level
 logger.setLevel(logging.ERROR)
 
 
@@ -32,13 +32,11 @@ def head_info(df: pd.DataFrame | pd.Series, n: int = 5) -> None:
     Returns:
         None
     """
-    if not isinstance(df, (pd.DataFrame, pd.Series)):
-        logger.error("Expected a pandas DataFrame or Series, got %s", type(df))
-        raise TypeError("df must be a pandas DataFrame or Series")
+    # validation for either a df or a series
+    validate_dataframe_or_series(df)
 
-    if not isinstance(n, int) or n <= 0:
-        logger.error("Invalid 'n' value: %s", n)
-        raise ValueError("n must be integer >= 1")
+    # validation for positive integer
+    validate_positive_integer(df)
 
     if isinstance(df, pd.Series):
         display(df.head(n))
@@ -65,13 +63,12 @@ def head(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
     Returns:
         pd.DataFrame or pd.Series: The top `n` rows.
     """
-    if not isinstance(df, (pd.DataFrame, pd.Series)):
-        logger.error("Expected a pandas DataFrame or Series, got %s", type(df))
-        raise TypeError("df must be a pandas DataFrame or Series")
+    
+    # validation for either a df or a series
+    validate_dataframe_or_series(df)
 
-    if not isinstance(n, int) or n <= 0:
-        logger.error("Invalid 'n' value: %s", n)
-        raise ValueError("n must be integer >= 1")
+    # validation for positive integer
+    validate_positive_integer(df)
 
     return df.head(n)
 
@@ -89,9 +86,8 @@ def info(df: pd.DataFrame) -> None:
     Returns:
         None
     """
-    if not isinstance(df, pd.DataFrame):
-        logger.error("Expected a pandas DataFrame, got %s", type(df))
-        raise TypeError("df must be a pandas DataFrame")
+    # validation for a df
+    validate_dataframe(df)
 
     df.info()
 
@@ -111,13 +107,12 @@ def tail(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
     Returns:
         pd.DataFrame or pd.Series: The bottom `n` rows.
     """
-    if not isinstance(df, (pd.DataFrame, pd.Series)):
-        logger.error("Expected a pandas DataFrame or Series, got %s", type(df))
-        raise TypeError("df must be a pandas DataFrame or Series")
+    
+    # validation for either a df or a series
+    validate_dataframe_or_series(df)
 
-    if not isinstance(n, int) or n <= 0:
-        logger.error("Invalid 'n' value: %s", n)
-        raise ValueError("n must be integer >= 1")
+    # validation for positive integer
+    validate_positive_integer(df)
 
     return df.tail(n)
 
@@ -137,9 +132,8 @@ def describe(df: pd.DataFrame, mode: str = 'numerical') -> pd.DataFrame:
     Returns:
         pd.DataFrame: Summary statistics.
     """
-    if not isinstance(df, pd.DataFrame):
-        logger.error("Expected a pandas DataFrame, got %s", type(df))
-        raise TypeError("df must be a pandas DataFrame")
+    # validation for a df
+    validate_dataframe(df)
 
     if mode not in ('numerical', 'full'):
         logger.error("Invalid mode: %s", mode)
@@ -148,7 +142,7 @@ def describe(df: pd.DataFrame, mode: str = 'numerical') -> pd.DataFrame:
     return df.describe() if mode == 'numerical' else df.describe(include='all')
 
 
-def column_overview(df: pd.DataFrame) -> pd.DataFrame:
+def columns_overview(df: pd.DataFrame) -> pd.DataFrame:
     """
     Returns a DataFrame summarizing data types and number of unique values.
 
@@ -158,8 +152,8 @@ def column_overview(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Summary of dtypes and unique values.
     """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a DataFrame")
+    # validation for a df
+    validate_dataframe(df)
 
     return pd.DataFrame({
         "dtype": df.dtypes,
@@ -200,12 +194,12 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     dtype = df.dtypes
 
     result = pd.DataFrame({
-        "missing_count": missing_count,
-        "missing_ratio": missing_ratio_per_col,
-        "dtype": dtype
+        "Missing Count": missing_count,
+        "Missing Ratio": missing_ratio_per_col,
+        "Data Type": dtype
     })
 
-    return result[result.missing_count > 0].sort_values(by="missing_ratio", ascending=False)
+    return result[result.missing_count > 0].sort_values(by="Missing Ratio", ascending=False)
 
 def top_values_summary(df: pd.DataFrame, top_n: int = 3) -> pd.DataFrame:
     """
@@ -234,6 +228,9 @@ def duplicate_summary(df: pd.DataFrame) -> int:
     Returns:
         int: Number of duplicated rows.
     """
+    # validation for a df
+    validate_dataframe(df)
+    
     return df.duplicated().sum()
 
 def outlier_summary(df: pd.DataFrame, multiplier: float = 1.5) -> pd.DataFrame:
@@ -283,7 +280,7 @@ def full_summary(df: pd.DataFrame, n: int = 5, describe_mode: str = 'numerical')
     display(describe(df, mode=describe_mode))
     
     print("\n ---Column Overview---")
-    display(column_overview(df))
+    display(columns_overview(df))
     
     print("\n ---Shape Summary---")
     display(shape_summary(df))
