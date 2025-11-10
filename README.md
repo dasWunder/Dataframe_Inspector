@@ -25,8 +25,4 @@ tests/
 
 ## Installation
 
-This module is not yet packaged on PyPI. To use it locally:
-
-```bash
-git clone <your-repo-url>
-cd Modules\ development
+To be described
