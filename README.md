@@ -11,9 +11,8 @@ functions/
 3. preprocessing.py # Missing values, duplicates, and basic cleaning
 4. eda.py # Exploratory visualizations (distribution, correlation, etc.)
 
-tests/
-1. testing.ipynb # Manual tests and function usage examples
-
+## Tests
+During the initial stage tests are conducted in .ipynb file called "Module tests.ipynb". ```TODO: rewrite tests into pytest later```
 
 ## Features
 
