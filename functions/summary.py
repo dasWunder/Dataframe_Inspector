@@ -38,7 +38,7 @@ def head_info(df: pd.DataFrame | pd.Series, n: int = 5) -> None:
     # validation for positive integer
     validate_positive_integer(n)
     
-    # since series doesn't have info method(), this is a manual alternative to dataframe's info method
+    # since series doesn't have method info(), this is a manual alternative to dataframe's info method
     if isinstance(df, pd.Series):
         display(df.head(n))
         print(f"Type: {df.dtype}")
@@ -92,6 +92,31 @@ def info(df: pd.DataFrame) -> None:
     validate_dataframe(df)
 
     df.info()
+
+
+def sample_rows(df: pd.DataFrame, n: int = 3, random_state: int | None = None) -> pd.DataFrame:
+    """
+    Returns a random sample of `n` rows from the DataFrame.
+
+    Useful for quick manual inspection of the data quality and consistency.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to sample from.
+        n (int, optional): Number of rows to sample. Must be positive integer. Defaults to 3.
+        random_state (int, optional): Seed for reproducibility. Defaults to 42.
+
+    Raises:
+        TypeError: If input is not a DataFrame.
+        ValueError: If `n` is not a positive integer.
+
+    Returns:
+        pd.DataFrame: Sampled rows from the DataFrame.
+    """
+    # Validators
+    validate_dataframe(df)
+    validate_positive_integer(n)
+
+    return df.sample(n=n, random_state=random_state)
 
 
 def tail(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
@@ -196,28 +221,50 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     dtype = df.dtypes
 
     result = pd.DataFrame({
+        "Column Name": df.columns,
         "Missing Count": missing_count,
         "Missing Ratio": missing_ratio_per_col,
         "Data Type": dtype
-    })
+    }).reset_index(drop=True)
 
-    return result[result.missing_count > 0].sort_values(by="Missing Ratio", ascending=False)
+    return result
 
 def top_values_summary(df: pd.DataFrame, top_n: int = 3) -> pd.DataFrame:
     """
-    Returns top `n` most frequent values for each column (object or categorical).
+    Returns the top `n` most frequent values for each object or categorical column.
+
+    The result includes value counts and percentages for quick overview of mode-level distribution.
 
     Args:
         df (pd.DataFrame): The DataFrame to inspect.
-        top_n (int, optional): Number of top values to return. Defaults to 3.
+        top_n (int, optional): Number of top values to return per column. Must be integer >= 1. Defaults to 3.
+
+    Raises:
+        TypeError: If input is not a pandas DataFrame.
+        ValueError: If top_n is not a positive integer.
 
     Returns:
-        pd.DataFrame: A dictionary-like overview of top values per column.
+        pd.DataFrame: DataFrame with columns: column, value, count, percentage.
     """
-    summary = {}
-    for col in df.select_dtypes(include=['object', 'category']):
-        summary[col] = df[col].value_counts().head(top_n).to_dict()
-    return pd.DataFrame.from_dict(summary, orient='index')
+    # validators
+    validate_dataframe(df)
+    validate_positive_integer(top_n)
+
+    summary = []
+
+    for col in df.select_dtypes(include=["object", "category"]).columns:
+        top_vals = df[col].value_counts().head(top_n)
+        for val, count in top_vals.items():
+            pct = count / df.shape[0] * 100
+            summary.append({
+                "column": col,
+                "value": val,
+                "count": count,
+                "percentage": round(pct, 2)
+            })
+
+    return pd.DataFrame(summary).sort_values(by=["column", "count"], ascending=[True, False])
+
 
 
 def duplicate_summary(df: pd.DataFrame) -> int:
@@ -294,7 +341,7 @@ def full_summary(df: pd.DataFrame, n: int = 5, describe_mode: str = 'numerical')
     display(top_values_summary(df))
 
     print("\n ---Duplicate Rows---")
-    display(f"{duplicate_summary(df)} rows")
+    display(f"{duplicate_summary(df)} duplicated rows")
     
     print("\n ---Outliers Summary---")
     display(outlier_summary(df))
