@@ -19,7 +19,7 @@ logger.setLevel(logging.ERROR)
 
 def head_info(df: pd.DataFrame | pd.Series, n: int = 5) -> None:
     """
-    Displays the first `n` rows and metadata of a DataFrame or Series.
+    Displays the first 5 rows (by default, else specified) and metadata of a DataFrame or Series.
     
     Args:
         df (pd.DataFrame or pd.Series): The object to inspect.
@@ -36,12 +36,14 @@ def head_info(df: pd.DataFrame | pd.Series, n: int = 5) -> None:
     validate_dataframe_or_series(df)
 
     # validation for positive integer
-    validate_positive_integer(df)
-
+    validate_positive_integer(n)
+    
+    # since series doesn't have info method(), this is a manual alternative to dataframe's info method
     if isinstance(df, pd.Series):
         display(df.head(n))
-        print(f"\nSeries name: {df.name}")
         print(f"Type: {df.dtype}")
+        print(f"Missing values number: {df.isnull().sum()}")
+        print(f'The shape is: {df.shape[0]}')
         return
 
     display(df.head(n))
@@ -68,7 +70,7 @@ def head(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
     validate_dataframe_or_series(df)
 
     # validation for positive integer
-    validate_positive_integer(df)
+    validate_positive_integer(n)
 
     return df.head(n)
 
@@ -112,7 +114,7 @@ def tail(df: pd.DataFrame | pd.Series, n: int = 5) -> pd.DataFrame | pd.Series:
     validate_dataframe_or_series(df)
 
     # validation for positive integer
-    validate_positive_integer(df)
+    validate_positive_integer(n)
 
     return df.tail(n)
 
