@@ -187,6 +187,7 @@ def columns_overview(df: pd.DataFrame) -> pd.DataFrame:
         "unique_values_count": df.nunique()
     }).sort_values(by="unique_values_count", ascending=False)
     
+
 def shape_summary(df: pd.DataFrame) -> dict:
     """
     Returns dictionary with number of rows, columns, and total values.
@@ -205,6 +206,7 @@ def shape_summary(df: pd.DataFrame) -> dict:
         "missing_values_number": df.isnull().sum().sum(),
         "duplicated_rows": df.duplicated().sum()
     }
+
 
 def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -228,6 +230,7 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     }).reset_index(drop=True)
 
     return result
+
 
 def top_values_summary(df: pd.DataFrame, top_n: int = 3) -> pd.DataFrame:
     """
@@ -266,7 +269,6 @@ def top_values_summary(df: pd.DataFrame, top_n: int = 3) -> pd.DataFrame:
     return pd.DataFrame(summary).sort_values(by=["column", "count"], ascending=[True, False])
 
 
-
 def duplicate_summary(df: pd.DataFrame) -> int:
     """
     Returns number of duplicated rows in the DataFrame.
@@ -281,6 +283,7 @@ def duplicate_summary(df: pd.DataFrame) -> int:
     validate_dataframe(df)
     
     return df.duplicated().sum()
+
 
 def outlier_summary(df: pd.DataFrame, multiplier: float = 1.5) -> pd.DataFrame:
     """
@@ -319,29 +322,23 @@ def full_summary(df: pd.DataFrame, n: int = 5, describe_mode: str = 'numerical')
     Returns:
         None
     """
-    print("\n ---Head---")
-    display(df.head())
-    
-    print("\n ---Info---")
-    print(df.info())
-    
-    print("\n ---Descriptive Stats---")
-    display(describe(df, mode=describe_mode))
-    
-    print("\n ---Column Overview---")
-    display(columns_overview(df))
-    
-    print("\n ---Shape Summary---")
-    display(shape_summary(df))
+    # analysis steps list
+    steps = [
+        ("Head", df.head(n)),
+        ("Info", None),  # special case
+        ("Descriptive Stats", describe(df, mode=describe_mode)),
+        ("Column Overview", columns_overview(df)),
+        ("Shape Summary", shape_summary(df)),
+        ("Missing Summary", missing_summary(df)),
+        ("Top Values Summary", top_values_summary(df)),
+        ("Duplicate Rows", f"{duplicate_summary(df)} duplicated rows"),
+        ("Outliers Summary", outlier_summary(df)),
+    ]
 
-    print("\n ---Missing Summary---")
-    display(missing_summary(df))
-    
-    print("\n ---Top Values Summary---")
-    display(top_values_summary(df))
-
-    print("\n ---Duplicate Rows---")
-    display(f"{duplicate_summary(df)} duplicated rows")
-    
-    print("\n ---Outliers Summary---")
-    display(outlier_summary(df))
+    # steps output
+    for title, result in steps:
+        print(f"\n--- {title} ---")
+        if title == "Info":
+            df.info()
+        else:
+            display(result)
